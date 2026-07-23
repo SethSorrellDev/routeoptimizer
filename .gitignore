@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Env / secrets
+.env
+
+# SQLite / instance data
+instance/
+*.db
+*.sqlite3
+
+# OS / editor
+.DS_Store
+.vscode/

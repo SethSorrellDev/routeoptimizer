@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}RouteOptimizer{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <nav class="bg-slate-900 text-slate-100">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="{{ url_for('main.index') }}" class="font-semibold tracking-tight">RouteOptimizer</a>
+      <div class="flex items-center gap-4 text-sm">
+        {% if current_user.is_authenticated %}
+          {% if current_user.is_manager %}
+            <a href="{{ url_for('manager.stop_list') }}" class="hover:text-white text-slate-300">Stops</a>
+            <a href="{{ url_for('manager.route_list') }}" class="hover:text-white text-slate-300">Routes</a>
+            <a href="{{ url_for('manager.holiday_list') }}" class="hover:text-white text-slate-300">Holidays</a>
+            <a href="{{ url_for('manager.map_view') }}" class="hover:text-white text-slate-300">Map</a>
+          {% endif %}
+          <span class="text-slate-400">{{ current_user.name }} &middot; {{ current_user.role.name }}</span>
+          <a href="{{ url_for('auth.logout') }}" class="hover:text-white text-slate-300">Log out</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="hover:text-white text-slate-300">Log in</a>
+          <a href="{{ url_for('auth.register') }}" class="hover:text-white text-slate-300">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="max-w-5xl mx-auto px-4 mt-4 space-y-2">
+        {% for category, message in messages %}
+          <div class="rounded-md px-4 py-2 text-sm
+            {% if category == 'danger' %}bg-red-100 text-red-800
+            {% elif category == 'warning' %}bg-amber-100 text-amber-800
+            {% elif category == 'success' %}bg-emerald-100 text-emerald-800
+            {% else %}bg-slate-200 text-slate-800{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

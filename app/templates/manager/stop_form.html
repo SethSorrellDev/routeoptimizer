@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — RouteOptimizer{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-bold text-slate-900">{{ title }}</h1>
+    <a href="{{ url_for('manager.stop_list') }}"
+       class="text-sm text-slate-500 hover:text-slate-900">← Back to Stops</a>
+  </div>
+
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-6">
+    <form method="POST" id="stop-form">
+      {{ form.hidden_tag() }}
+
+      {# Basic info #}
+      <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Basic Info</h2>
+      <div class="mb-4">
+        {{ form.name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.name(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+        {% for e in form.name.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+      </div>
+      <div class="mb-4">
+        {{ form.address.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.address(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+        {% for e in form.address.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+      </div>
+      <div class="mb-6">
+        {{ form.service_type.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.service_type(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+      </div>
+
+      {# Coordinates #}
+      <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-1">Coordinates</h2>
+      <p class="text-xs text-slate-400 mb-3">
+        Auto-filled when a stop is created. Use Re-geocode to refresh from the
+        address, or type manually if geocoding returns a wrong location.
+      </p>
+      <div class="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          {{ form.latitude.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.latitude(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.latitude.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+        <div>
+          {{ form.longitude.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.longitude(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.longitude.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+      {% if request.endpoint == 'manager.stop_edit' %}
+      <form method="POST"
+            action="{{ url_for('manager.stop_geocode', stop_id=request.view_args.stop_id) }}"
+            class="mb-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit"
+                class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md font-medium">
+          ↻ Re-geocode from address
+        </button>
+      </form>
+      {% endif %}
+
+      {# Time window #}
+      <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Time Window</h2>
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div>
+          {{ form.open_time.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.open_time(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.open_time.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+        <div>
+          {{ form.close_time.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.close_time(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.close_time.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+
+      {# Service details #}
+      <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Service Details</h2>
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div>
+          {{ form.service_time_solo_minutes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.service_time_solo_minutes(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.service_time_solo_minutes.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+        <div>
+          {{ form.volume_units.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+          {{ form.volume_units(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          {% for e in form.volume_units.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+
+      {# Special instructions #}
+      <div class="mb-6">
+        {{ form.special_instructions.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.special_instructions(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500", rows=3) }}
+        <p class="text-xs text-slate-400 mt-1">{{ form.special_instructions.description }}</p>
+      </div>
+
+      {# Contacts #}
+      <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Contacts</h2>
+      <div id="contacts-list" class="space-y-3 mb-3">
+        {% for contact in form.contacts %}
+        <div class="contact-row grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Name</label>
+            {{ contact.form.name(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+            {{ contact.form.phone(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" id="add-contact"
+              class="text-sm text-slate-600 hover:text-slate-900 font-medium mb-6">
+        + Add another contact
+      </button>
+
+      {{ form.submit(class="w-full bg-slate-900 text-white rounded-md py-2 text-sm font-medium hover:bg-slate-700") }}
+    </form>
+  </div>
+</div>
+
+<script>
+  const addBtn = document.getElementById('add-contact');
+  const list = document.getElementById('contacts-list');
+  let count = {{ form.contacts | length }};
+  const max = 10;
+
+  addBtn.addEventListener('click', function () {
+    if (count >= max) return;
+    const row = document.createElement('div');
+    row.className = 'contact-row grid grid-cols-2 gap-3';
+    row.innerHTML = `
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Name</label>
+        <input type="text" name="contacts-${count}-name"
+               class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+        <input type="text" name="contacts-${count}-phone"
+               class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+      </div>`;
+    list.appendChild(row);
+    count++;
+    if (count >= max) addBtn.style.display = 'none';
+  });
+</script>
+{% endblock %}

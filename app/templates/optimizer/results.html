@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ route.name }} {{ result.day_of_week }}{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-xl font-bold text-slate-900">
+      {{ route.name }} — {{ result.day_of_week }}
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Generated {{ result.generated_at.strftime("%b %d, %Y %H:%M") if result.generated_at else "" }}
+    </p>
+  </div>
+  <div class="flex gap-3">
+    <a href="{{ url_for('optimizer.run', route_id=route.id) }}"
+       class="text-sm bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50">
+      Re-run
+    </a>
+    <a href="{{ url_for('manager.route_detail', route_id=route.id) }}"
+       class="text-sm text-slate-500 hover:text-slate-900 py-2">← Route</a>
+  </div>
+</div>
+
+{% if warnings %}
+<div class="mb-6 space-y-2">
+  {% for w in warnings %}
+  <div class="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+    ⚠ {{ w }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Departure</p>
+    <p class="text-2xl font-bold text-slate-900">
+      {{ result.recommended_departure_time.strftime("%H:%M") if result.recommended_departure_time else "—" }}
+    </p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Return</p>
+    <p class="text-2xl font-bold text-slate-900">
+      {{ result.estimated_return_time.strftime("%H:%M") if result.estimated_return_time else "—" }}
+    </p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Assistants</p>
+    <p class="text-2xl font-bold text-slate-900">{{ result.assistants_required }}</p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Feasible</p>
+    <p class="text-2xl font-bold {{ 'text-emerald-600' if result.feasible else 'text-red-600' }}">
+      {{ "Yes" if result.feasible else "No" }}
+    </p>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Distance</p>
+    <p class="text-lg font-semibold text-slate-900">
+      {{ "%.1f"|format(result.total_distance_meters / 1000 * 0.621371) }} mi
+    </p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Drive Time</p>
+    <p class="text-lg font-semibold text-slate-900">
+      {{ "%.1f"|format(result.total_drive_seconds / 3600) }} hrs
+    </p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Capacity</p>
+    <p class="text-lg font-semibold text-slate-900">
+      {{ "%.0f"|format(result.capacity_utilization_pct) }}%
+    </p>
+  </div>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-4">
+    <p class="text-xs text-slate-500 uppercase tracking-wide mb-1">Est. Cost</p>
+    <p class="text-lg font-semibold text-slate-900">
+      ${{ "%.2f"|format(result.estimated_cost) if result.estimated_cost else "—" }}
+    </p>
+  </div>
+</div>
+
+<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+  <div id="map" style="height: 420px;"></div>
+</div>
+
+<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+  <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+    <h2 class="text-sm font-semibold text-slate-700">Optimized Itinerary</h2>
+  </div>
+  <table class="w-full text-sm">
+    <thead class="border-b border-slate-100">
+      <tr>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">#</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Stop</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Arrive</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Depart</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Volume</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Window</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      <tr class="bg-slate-50">
+        <td class="px-4 py-3 text-slate-400">—</td>
+        <td class="px-4 py-3 font-medium text-slate-900">{{ plant.name }} (depot)</td>
+        <td class="px-4 py-3 text-slate-600">—</td>
+        <td class="px-4 py-3 text-slate-600">
+          {{ result.recommended_departure_time.strftime("%H:%M") if result.recommended_departure_time else "—" }}
+        </td>
+        <td class="px-4 py-3 text-slate-400">—</td>
+        <td class="px-4 py-3 text-slate-400">—</td>
+      </tr>
+      {% for ors in result.result_stops %}
+      <tr class="{{ 'bg-red-50' if not ors.time_window_ok else 'hover:bg-slate-50' }}">
+        <td class="px-4 py-3 text-slate-500 font-mono">{{ ors.sequence_order }}</td>
+        <td class="px-4 py-3 font-medium {{ 'text-red-800' if not ors.time_window_ok else 'text-slate-900' }}">
+          {{ ors.stop.name }}
+          {% if not ors.time_window_ok %}
+            <span class="ml-2 text-xs bg-red-200 text-red-800 rounded px-1">window violated</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 {{ 'text-red-700' if not ors.time_window_ok else 'text-slate-600' }}">
+          {{ ors.estimated_arrival_time.strftime("%H:%M") if ors.estimated_arrival_time else "—" }}
+        </td>
+        <td class="px-4 py-3 text-slate-600">
+          {{ ors.estimated_departure_time.strftime("%H:%M") if ors.estimated_departure_time else "—" }}
+        </td>
+        <td class="px-4 py-3 text-slate-600">{{ ors.cumulative_volume }}</td>
+        <td class="px-4 py-3 text-slate-600 text-xs">
+          {% if ors.stop.open_time and ors.stop.close_time %}
+            {{ ors.stop.open_time.strftime("%H:%M") }} – {{ ors.stop.close_time.strftime("%H:%M") }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      <tr class="bg-slate-50">
+        <td class="px-4 py-3 text-slate-400">—</td>
+        <td class="px-4 py-3 font-medium text-slate-900">{{ plant.name }} (return)</td>
+        <td class="px-4 py-3 text-slate-600">
+          {{ result.estimated_return_time.strftime("%H:%M") if result.estimated_return_time else "—" }}
+        </td>
+        <td class="px-4 py-3 text-slate-400">—</td>
+        <td class="px-4 py-3 text-slate-400">—</td>
+        <td class="px-4 py-3 text-slate-400">—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const points = {{ map_points | tojson }};
+  const plant = points[0];
+
+  const map = L.map('map').setView([plant.lat, plant.lon], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const lineCoords = points
+    .filter(p => p.lat && p.lon)
+    .map(p => [p.lat, p.lon]);
+  L.polyline(lineCoords, { color: '#0f172a', weight: 2.5, opacity: 0.7 }).addTo(map);
+
+  const plantIcon = L.divIcon({
+    className: '',
+    html: '<div style="background:#0f172a;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>',
+    iconSize: [14, 14], iconAnchor: [7, 7],
+  });
+  L.marker([plant.lat, plant.lon], { icon: plantIcon })
+   .addTo(map)
+   .bindPopup(`<strong>${plant.name}</strong><br>Depot`);
+
+  points.filter(p => p.type === 'stop').forEach(p => {
+    const ok = p.ok !== false;
+    const color = ok ? '#2563eb' : '#dc2626';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:${color};color:white;width:22px;height:22px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold">${p.seq}</div>`,
+      iconSize: [22, 22], iconAnchor: [11, 11],
+    });
+    L.marker([p.lat, p.lon], { icon })
+     .addTo(map)
+     .bindPopup(`<strong>${p.seq}. ${p.name}</strong><br>Arrive: ${p.arrive}<br>Depart: ${p.depart}${ok ? '' : '<br><span style="color:red">⚠ window violated</span>'}`);
+  });
+
+  const allCoords = points.filter(p => p.lat && p.lon).map(p => [p.lat, p.lon]);
+  if (allCoords.length > 1) map.fitBounds(allCoords, { padding: [30, 30] });
+</script>
+{% endblock %}

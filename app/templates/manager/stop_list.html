@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Stops — RouteOptimizer{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-bold text-slate-900">Stops</h1>
+  <a href="{{ url_for('manager.stop_new') }}"
+     class="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-md hover:bg-slate-700">
+    + New Stop
+  </a>
+</div>
+
+{% if stops %}
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 border-b border-slate-200">
+        <tr>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Name</th>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Address</th>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Type</th>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Window</th>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Solo Time</th>
+          <th class="text-left px-4 py-3 font-medium text-slate-600">Volume</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for stop in stops %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-4 py-3 font-medium text-slate-900">
+            {{ stop.name }}
+            {% if stop.priority_tier > 0 %}
+              <span class="ml-1 text-xs bg-amber-100 text-amber-700 rounded px-1">
+                P{{ stop.priority_tier }}
+              </span>
+            {% endif %}
+            {% if stop.fixed_appointment_time %}
+              <span class="ml-1 text-xs bg-red-100 text-red-700 rounded px-1">appt</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-slate-600">{{ stop.address or "—" }}</td>
+          <td class="px-4 py-3 text-slate-600 capitalize">{{ stop.service_type or "—" }}</td>
+          <td class="px-4 py-3 text-slate-600">
+            {% if stop.open_time and stop.close_time %}
+              {{ stop.open_time.strftime("%I:%M %p") }} –
+              {{ stop.close_time.strftime("%I:%M %p") }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-slate-600">{{ stop.service_time_solo_minutes }} min</td>
+          <td class="px-4 py-3 text-slate-600">{{ stop.volume_units }}</td>
+          <td class="px-4 py-3 text-right space-x-3">
+            <a href="{{ url_for('manager.stop_edit', stop_id=stop.id) }}"
+               class="text-slate-600 hover:text-slate-900 font-medium">Edit</a>
+            <form method="POST"
+                  action="{{ url_for('manager.stop_delete', stop_id=stop.id) }}"
+                  class="inline"
+                  onsubmit="return confirm('Delete {{ stop.name }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit"
+                      class="text-red-500 hover:text-red-700 font-medium">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-8 text-center text-slate-500">
+    No stops yet. <a href="{{ url_for('manager.stop_new') }}"
+    class="text-slate-900 font-medium hover:underline">Add the first one</a>.
+  </div>
+{% endif %}
+{% endblock %}

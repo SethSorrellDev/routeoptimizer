@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Map — RouteOptimizer{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-xl font-bold text-slate-900">Stop Map</h1>
+  <span class="text-sm text-slate-500">{{ stops|length }} stop(s) · Frankfort plant</span>
+</div>
+
+<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden mb-6">
+  <div id="map" style="height: 520px;"></div>
+</div>
+
+<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 border-b border-slate-200">
+      <tr>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Stop</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Address</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Coordinates</th>
+        <th class="text-left px-4 py-3 font-medium text-slate-600">Status</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for stop in stops %}
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-3 font-medium text-slate-900">{{ stop.name }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ stop.address or "—" }}</td>
+        <td class="px-4 py-3 text-slate-600 font-mono text-xs">
+          {% if stop.latitude and stop.longitude %}
+            {{ "%.5f"|format(stop.latitude) }}, {{ "%.5f"|format(stop.longitude) }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% if stop.latitude and stop.longitude %}
+            <span class="text-xs bg-emerald-100 text-emerald-700 rounded px-2 py-0.5">Geocoded</span>
+          {% else %}
+            <span class="text-xs bg-amber-100 text-amber-700 rounded px-2 py-0.5">No coords</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const plant = { lat: {{ plant.latitude }}, lon: {{ plant.longitude }}, name: {{ plant.name | tojson }} };
+  const stops = {{ stop_data | tojson }};
+
+  const map = L.map('map').setView([plant.lat, plant.lon], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const plantIcon = L.divIcon({
+    className: '',
+    html: '<div style="background:#0f172a;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+  L.marker([plant.lat, plant.lon], { icon: plantIcon })
+   .addTo(map)
+   .bindPopup(`<strong>${plant.name}</strong><br>Depot`);
+
+  const stopIcon = L.divIcon({
+    className: '',
+    html: '<div style="background:#2563eb;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>',
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  });
+
+  stops.forEach(s => {
+    if (s.lat && s.lon) {
+      L.marker([s.lat, s.lon], { icon: stopIcon })
+       .addTo(map)
+       .bindPopup(`<strong>${s.name}</strong><br>${s.address || ''}`);
+    }
+  });
+
+  const allPoints = [[plant.lat, plant.lon], ...stops.filter(s => s.lat && s.lon).map(s => [s.lat, s.lon])];
+  if (allPoints.length > 1) {
+    map.fitBounds(allPoints, { padding: [30, 30] });
+  }
+</script>
+{% endblock %}
