@@ -35,7 +35,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=120), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
-    sa.Column('plant_closed', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('plant_closed', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_holidays'))
     )
     op.create_table('plants',
@@ -64,7 +64,7 @@ def upgrade():
     sa.Column('longitude', sa.Float(), nullable=True),
     sa.Column('service_time_solo_minutes', sa.Integer(), nullable=False),
     sa.Column('service_type', sa.String(length=50), nullable=True),
-    sa.Column('has_dock', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('has_dock', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.Column('priority_tier', sa.Integer(), nullable=False),
     sa.Column('open_time', app.sqltypes.TimeType(length=8), nullable=True),
     sa.Column('close_time', app.sqltypes.TimeType(length=8), nullable=True),
@@ -130,7 +130,7 @@ def upgrade():
     sa.Column('total_service_seconds', sa.Float(), nullable=True),
     sa.Column('capacity_utilization_pct', sa.Float(), nullable=True),
     sa.Column('estimated_cost', sa.Float(), nullable=True),
-    sa.Column('feasible', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('feasible', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.Column('warnings', sa.Text(), nullable=True),
     sa.ForeignKeyConstraint(['route_id'], ['routes.id'], name=op.f('fk_optimization_results_route_id_routes'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_optimization_results'))
@@ -154,7 +154,7 @@ def upgrade():
     sa.Column('estimated_arrival_time', app.sqltypes.TimeType(length=8), nullable=True),
     sa.Column('estimated_departure_time', app.sqltypes.TimeType(length=8), nullable=True),
     sa.Column('cumulative_volume', sa.Integer(), nullable=True),
-    sa.Column('time_window_ok', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('time_window_ok', sa.Boolean(), server_default=sa.text('false'), nullable=False),
     sa.ForeignKeyConstraint(['optimization_result_id'], ['optimization_results.id'], name=op.f('fk_optimization_result_stops_optimization_result_id_optimization_results'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['stop_id'], ['stops.id'], name=op.f('fk_optimization_result_stops_stop_id_stops'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_optimization_result_stops'))
