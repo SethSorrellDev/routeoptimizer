@@ -10,7 +10,7 @@ from app.extensions import db
 from app.models import (Plant, Stop, StopContact, Route, RouteStop,
                         User, Role, Holiday, StopClosure)
 from app.manager.forms import (StopForm, RouteForm, RouteStopForm,
-                                HolidayForm, StopClosureForm)
+                                HolidayForm, StopClosureForm, PlantForm)
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 
@@ -371,6 +371,29 @@ def stop_closure_delete(closure_id):
     db.session.commit()
     flash("Stop closure removed.", "warning")
     return redirect(url_for("manager.holiday_list"))
+
+
+# ---------------------------------------------------------------------------
+# Plant settings
+# ---------------------------------------------------------------------------
+@manager_bp.route("/plant/edit", methods=["GET", "POST"])
+@login_required
+@manager_required
+def plant_edit():
+    plant = get_plant()
+    form = PlantForm(obj=plant)
+    if form.validate_on_submit():
+        plant.name = form.name.data
+        plant.address = form.address.data
+        plant.latitude = form.latitude.data
+        plant.longitude = form.longitude.data
+        plant.loading_time_minutes = form.loading_time_minutes.data
+        plant.shift_start_earliest = form.shift_start_earliest.data
+        plant.max_shift_minutes = form.max_shift_minutes.data
+        db.session.commit()
+        flash(f"Plant '{plant.name}' updated.", "success")
+        return redirect(url_for("manager.plant_edit"))
+    return render_template("manager/plant_form.html", form=form, title="Plant Settings")
 
 
 # ---------------------------------------------------------------------------

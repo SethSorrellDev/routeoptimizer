@@ -101,3 +101,18 @@ class StopClosureForm(FlaskForm):
     stop_id = SelectField("Stop", coerce=int, validators=[DataRequired()])
     date = DateField("Date", validators=[DataRequired()])
     submit = SubmitField("Add Stop Closure")
+
+
+class PlantForm(FlaskForm):
+    name = StringField("Plant Name", validators=[DataRequired(), Length(max=120)])
+    address = StringField("Address", validators=[Optional(), Length(max=255)])
+    latitude = FloatField("Latitude", validators=[Optional()])
+    longitude = FloatField("Longitude", validators=[Optional()])
+    loading_time_minutes = IntegerField(
+        "Loading Time (minutes)", validators=[DataRequired(), NumberRange(min=0)]
+    )
+    shift_start_earliest = TimeField("Earliest Shift Start", validators=[DataRequired()])
+    max_shift_minutes = IntegerField(
+        "Max Shift Length (minutes)", validators=[DataRequired(), NumberRange(min=1)]
+    )
+    submit = SubmitField("Save Plant")

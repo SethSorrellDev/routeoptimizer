@@ -17,6 +17,7 @@
             <a href="{{ url_for('manager.route_list') }}" class="hover:text-white text-slate-300">Routes</a>
             <a href="{{ url_for('manager.holiday_list') }}" class="hover:text-white text-slate-300">Holidays</a>
             <a href="{{ url_for('manager.map_view') }}" class="hover:text-white text-slate-300">Map</a>
+            <a href="{{ url_for('manager.plant_edit') }}" class="hover:text-white text-slate-300">Plant</a>
           {% endif %}
           <span class="text-slate-400">{{ current_user.name }} &middot; {{ current_user.role.name }}</span>
           <a href="{{ url_for('auth.logout') }}" class="hover:text-white text-slate-300">Log out</a>
