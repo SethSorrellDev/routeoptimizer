@@ -116,3 +116,29 @@ class PlantForm(FlaskForm):
         "Max Shift Length (minutes)", validators=[DataRequired(), NumberRange(min=1)]
     )
     submit = SubmitField("Save Plant")
+
+
+class EditRouteStopForm(FlaskForm):
+    service_days = StringField(
+        "Service Days",
+        validators=[DataRequired(), Length(max=20)],
+        description="e.g. MWF or TR or MTWRF",
+    )
+    volume_override = IntegerField(
+        "Volume Override (leave blank to use stop default)",
+        validators=[Optional(), NumberRange(min=0)],
+    )
+    submit = SubmitField("Save Changes")
+
+
+class EditRouteStopForm(FlaskForm):
+    service_days = StringField(
+        "Service Days",
+        validators=[DataRequired(), Length(max=20)],
+        description="e.g. MWF or TR or MTWRF",
+    )
+    volume_override = IntegerField(
+        "Volume Override (leave blank to use stop default)",
+        validators=[Optional(), NumberRange(min=0)],
+    )
+    submit = SubmitField("Save Changes")

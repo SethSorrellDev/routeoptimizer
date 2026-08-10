@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Edit Schedule — RouteOptimizer{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-bold text-slate-900">Edit Schedule — {{ rs.stop.name }}</h1>
+    <a href="{{ url_for('manager.route_detail', route_id=route_id) }}"
+       class="text-sm text-slate-500 hover:text-slate-900">← Back to Route</a>
+  </div>
+
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm p-6">
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="mb-4">
+        {{ form.service_days.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.service_days(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500",
+                             placeholder="e.g. MWF or TR or MTWRF") }}
+        <p class="text-xs text-slate-400 mt-1">{{ form.service_days.description }}</p>
+        {% for e in form.service_days.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+      </div>
+
+      <div class="mb-6">
+        {{ form.volume_override.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+        {{ form.volume_override(class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500") }}
+        <p class="text-xs text-slate-400 mt-1">{{ form.volume_override.description }}</p>
+      </div>
+
+      {{ form.submit(class="w-full bg-slate-900 text-white rounded-md py-2 text-sm font-medium hover:bg-slate-700") }}
+    </form>
+  </div>
+</div>
+{% endblock %}

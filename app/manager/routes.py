@@ -10,7 +10,8 @@ from app.extensions import db
 from app.models import (Plant, Stop, StopContact, Route, RouteStop,
                         User, Role, Holiday, StopClosure)
 from app.manager.forms import (StopForm, RouteForm, RouteStopForm,
-                                HolidayForm, StopClosureForm, PlantForm)
+                                HolidayForm, StopClosureForm, PlantForm,
+                                EditRouteStopForm)
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 
@@ -276,6 +277,21 @@ def route_stop_add(route_id):
         db.session.commit()
         flash("Stop added to route.", "success")
     return redirect(url_for("manager.route_detail", route_id=route.id))
+
+
+@manager_bp.route("/routes/<int:route_id>/stops/<int:rs_id>/edit", methods=["GET", "POST"])
+@login_required
+@manager_required
+def route_stop_edit(route_id, rs_id):
+    rs = db.get_or_404(RouteStop, rs_id)
+    form = EditRouteStopForm(obj=rs)
+    if form.validate_on_submit():
+        rs.service_days = form.service_days.data.upper()
+        rs.volume_override = form.volume_override.data
+        db.session.commit()
+        flash(f"Updated schedule for '{rs.stop.name}'.", "success")
+        return redirect(url_for("manager.route_detail", route_id=route_id))
+    return render_template("manager/route_stop_form.html", form=form, rs=rs, route_id=route_id)
 
 
 @manager_bp.route("/routes/<int:route_id>/stops/<int:rs_id>/delete", methods=["POST"])

@@ -49,7 +49,9 @@
         <td class="px-4 py-3 text-slate-600">
           {{ rs.volume_override if rs.volume_override is not none else rs.stop.volume_units }}
         </td>
-        <td class="px-4 py-3 text-right">
+        <td class="px-4 py-3 text-right space-x-3">
+          <a href="{{ url_for('manager.route_stop_edit', route_id=route.id, rs_id=rs.id) }}"
+             class="text-slate-600 hover:text-slate-900 text-sm font-medium">Edit</a>
           <form method="POST"
                 action="{{ url_for('manager.route_stop_delete', route_id=route.id, rs_id=rs.id) }}"
                 class="inline"
