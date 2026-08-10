@@ -529,7 +529,17 @@ def optimize(route_id: int, day_of_week: str) -> OptimizationPlan | None:
     # Add return leg
     total_distance += matrix.distances[current][0]
     total_drive += matrix.durations[current][0]
-    estimated_return = departure + (total_drive + total_service) / 60
+
+    # Base the return estimate on the last stop's actual (wait-inclusive)
+    # departure time, not a re-summed drive+service total — that summation
+    # silently dropped wait time, understating the return whenever a stop's
+    # window forced the truck to wait before service could start.
+    if stop_results:
+        last_depart = stop_results[-1].depart_minutes
+        return_travel_minutes = matrix.durations[current][0] / 60
+        estimated_return = last_depart + return_travel_minutes
+    else:
+        estimated_return = departure
 
     cap_pct = (cumulative_vol / capacity * 100) if capacity > 0 else 0.0
 
