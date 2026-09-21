@@ -73,8 +73,15 @@ feasibility verdict, and explicit warnings naming any violated window.
 
 ## Screenshots
 
-_Screenshots coming soon — results dashboard, route map, itinerary table, and
-stop editor._
+| | |
+|---|---|
+| ![Optimizer results dashboard](docs/screenshots/results-dashboard.png) | ![Route map with sequenced stops](docs/screenshots/route-map.png) |
+| Summary cards: departure, return, assistants, feasibility, distance, cost | The optimized route drawn in sequence order on Leaflet |
+
+| | |
+|---|---|
+| ![Itinerary table](docs/screenshots/itinerary.png) | ![Stop editor](docs/screenshots/stop-form.png) |
+| Per-stop arrival/departure against each customer's window | Manual coordinate override for addresses the geocoder gets wrong |
 
 ---
 
