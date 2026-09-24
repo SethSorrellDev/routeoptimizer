@@ -10,7 +10,9 @@
   <nav class="bg-slate-900 text-slate-100">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="{{ url_for('main.index') }}" class="font-semibold tracking-tight">RouteOptimizer</a>
-      <div class="flex items-center gap-4 text-sm">
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-4 text-sm">
         {% if current_user.is_authenticated %}
           {% if current_user.is_manager %}
             <a href="{{ url_for('manager.stop_list') }}" class="hover:text-white text-slate-300">Stops</a>
@@ -24,6 +26,39 @@
         {% else %}
           <a href="{{ url_for('auth.login') }}" class="hover:text-white text-slate-300">Log in</a>
           <a href="{{ url_for('auth.register') }}" class="hover:text-white text-slate-300">Register</a>
+        {% endif %}
+      </div>
+
+      <!-- Mobile hamburger toggle -->
+      <button id="nav-toggle" type="button"
+              class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-slate-100 hover:bg-white/10 focus:outline-none"
+              aria-controls="mobile-menu" aria-expanded="false">
+        <span class="sr-only">Open main menu</span>
+        <svg id="nav-icon-open" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="nav-icon-close" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile menu panel -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-white/10">
+      <div class="px-4 pt-2 pb-4 space-y-1 text-sm">
+        {% if current_user.is_authenticated %}
+          {% if current_user.is_manager %}
+            <a href="{{ url_for('manager.stop_list') }}" class="block py-2 hover:text-white text-slate-300">Stops</a>
+            <a href="{{ url_for('manager.route_list') }}" class="block py-2 hover:text-white text-slate-300">Routes</a>
+            <a href="{{ url_for('manager.holiday_list') }}" class="block py-2 hover:text-white text-slate-300">Holidays</a>
+            <a href="{{ url_for('manager.map_view') }}" class="block py-2 hover:text-white text-slate-300">Map</a>
+            <a href="{{ url_for('manager.plant_edit') }}" class="block py-2 hover:text-white text-slate-300">Plant</a>
+          {% endif %}
+          <div class="pt-2 mt-2 border-t border-white/10 text-slate-400">{{ current_user.name }} &middot; {{ current_user.role.name }}</div>
+          <a href="{{ url_for('auth.logout') }}" class="block py-2 hover:text-white text-slate-300">Log out</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="block py-2 hover:text-white text-slate-300">Log in</a>
+          <a href="{{ url_for('auth.register') }}" class="block py-2 hover:text-white text-slate-300">Register</a>
         {% endif %}
       </div>
     </div>
@@ -48,5 +83,23 @@
   <main class="max-w-5xl mx-auto px-4 py-8">
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById('nav-toggle');
+      var menu = document.getElementById('mobile-menu');
+      var iconOpen = document.getElementById('nav-icon-open');
+      var iconClose = document.getElementById('nav-icon-close');
+      if (toggle && menu) {
+        toggle.addEventListener('click', function () {
+          var isHidden = menu.classList.contains('hidden');
+          menu.classList.toggle('hidden');
+          iconOpen.classList.toggle('hidden');
+          iconClose.classList.toggle('hidden');
+          toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
