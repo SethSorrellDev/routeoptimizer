@@ -22,18 +22,21 @@ def register():
         return redirect(url_for("main.index"))
     form = RegistrationForm()
     if form.validate_on_submit():
-        role = Role.query.filter_by(name=form.role.data).first()
-        user = User(
-            name=form.name.data,
-            username=form.username.data,
-            email=form.email.data,
-            role_id=role.id,
-        )
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash(f"Account created for {user.username}. Please log in.", "success")
-        return redirect(url_for("auth.login"))
+        email = form.email.data.strip()
+        try:
+            claims = identity.register(form.name.data, email, form.password.data)
+        except identity.IdentityError as exc:
+            flash(str(exc), "danger")
+            return render_template("auth/register.html", form=form)
+
+        user, problem = _resolve_local_user(claims, form.password.data, name=form.name.data.strip())
+        if problem:
+            flash(problem, "danger")
+            return render_template("auth/register.html", form=form)
+
+        login_user(user)
+        flash(f"Account created. Welcome, {user.name}.", "success")
+        return redirect(url_for("main.index"))
     return render_template("auth/register.html", form=form)
 
 
@@ -46,7 +49,7 @@ def _unique_username(base):
     return candidate
 
 
-def _resolve_local_user(claims, password):
+def _resolve_local_user(claims, password, name=None):
     """Map verified identity claims to a local User, or return (None, message).
 
     1. Already linked: match on the identity "sub".
@@ -79,7 +82,7 @@ def _resolve_local_user(claims, password):
     if role is None:
         return None, "Accounts are not set up yet. Ask an administrator."
     user = User(
-        name=email.split("@")[0],
+        name=name or email.split("@")[0],
         username=_unique_username(email.split("@")[0]),
         email=email,
         role_id=role.id,
