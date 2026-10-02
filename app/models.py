@@ -42,6 +42,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    # Subject ("sub") of this person in the shared identity-service. NULL until
+    # their first SSO login links the account.
+    identity_sub = db.Column(db.String(36), unique=True, nullable=True, index=True)
     name = db.Column(db.String(120), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False)
 
