@@ -203,3 +203,52 @@ def test_registration_rejects_mismatched_passwords_without_calling_identity(clie
     response = post_register(client, confirm="different-password")
     assert response.status_code == 200
     assert logged_in_user_id(client) is None
+
+
+# ---- registration ---------------------------------------------------------
+
+def post_register(client, name="Pat Doe", email=EMAIL, password="testpass123", confirm=None):
+    return client.post("/auth/register", data={
+        "name": name, "email": email, "password": password,
+        "confirm": confirm if confirm is not None else password,
+    })
+
+
+def test_registration_creates_an_ssr_and_logs_in(client, db, monkeypatch):
+    monkeypatch.setattr(identity, "register", lambda n, e, p: {"sub": SUB, "email": e})
+    response = post_register(client)
+    assert response.status_code == 302
+    db.session.expire_all()
+    user = User.query.filter_by(identity_sub=SUB).one()
+    assert user.role.name == "SSR"
+    assert user.name == "Pat Doe"
+    assert logged_in_user_id(client) == str(user.id)
+
+
+def test_registration_cannot_choose_a_role(client, db, monkeypatch):
+    monkeypatch.setattr(identity, "register", lambda n, e, p: {"sub": SUB, "email": e})
+    post_register(client)  # even a forged "role" field is ignored
+    client.get("/auth/logout")
+    client.post("/auth/register", data={"name": "X Y", "email": "x@y.org", "password": "testpass123",
+                                         "confirm": "testpass123", "role": "Manager"})
+    assert all(u.role.name == "SSR" for u in User.query.all())
+
+
+def test_registration_surfaces_identity_errors(client, db, monkeypatch):
+    def reject(n, e, p):
+        raise identity.IdentityError("Email already registered")
+    monkeypatch.setattr(identity, "register", reject)
+    response = post_register(client)
+    assert response.status_code == 200
+    assert b"Email already registered" in response.data
+    assert User.query.count() == 0
+    assert logged_in_user_id(client) is None
+
+
+def test_registration_rejects_mismatched_passwords_without_calling_identity(client, monkeypatch):
+    def boom(n, e, p):
+        raise AssertionError("identity-service must not be called")
+    monkeypatch.setattr(identity, "register", boom)
+    response = post_register(client, confirm="different-password")
+    assert response.status_code == 200
+    assert logged_in_user_id(client) is None

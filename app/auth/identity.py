@@ -127,3 +127,35 @@ def register(name, email, password):
         raise IdentityError("The sign-in service returned an unexpected response.") from exc
 
     return verify_access_token(access_token)
+
+
+def register(name, email, password):
+    """Create the account in identity-service and return verified access-token claims."""
+    parts = name.strip().split(None, 1)
+    first = parts[0] if parts else "User"
+    last = parts[1] if len(parts) > 1 else "-"  # identity-service requires a last name
+    try:
+        response = requests.post(
+            f"{_base_url()}/auth/register",
+            json={"email": email, "password": password, "firstName": first, "lastName": last},
+            timeout=TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        raise IdentityError("The sign-in service is unavailable. Try again shortly.") from exc
+
+    if response.status_code == 400:
+        try:
+            message = response.json().get("error") or "Registration was rejected."
+        except ValueError:
+            message = "Registration was rejected."
+        raise IdentityError(message)
+
+    if not response.ok:
+        raise IdentityError("The sign-in service returned an error. Try again shortly.")
+
+    try:
+        access_token = response.json()["accessToken"]
+    except (ValueError, KeyError) as exc:
+        raise IdentityError("The sign-in service returned an unexpected response.") from exc
+
+    return verify_access_token(access_token)
