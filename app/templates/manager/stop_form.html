@@ -48,15 +48,10 @@
         </div>
       </div>
       {% if request.endpoint == 'manager.stop_edit' %}
-      <form method="POST"
-            action="{{ url_for('manager.stop_geocode', stop_id=request.view_args.stop_id) }}"
-            class="mb-6">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit"
-                class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md font-medium">
-          ↻ Re-geocode from address
-        </button>
-      </form>
+      <button type="submit" form="geocode-form"
+              class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-md font-medium mb-6">
+        ↻ Re-geocode from address
+      </button>
       {% endif %}
 
       {# Time window #}
@@ -119,6 +114,14 @@
 
       {{ form.submit(class="w-full bg-slate-900 text-white rounded-md py-2 text-sm font-medium hover:bg-slate-700") }}
     </form>
+
+    {% if request.endpoint == 'manager.stop_edit' %}
+    <form id="geocode-form" method="POST"
+          action="{{ url_for('manager.stop_geocode', stop_id=request.view_args.stop_id) }}"
+          class="hidden">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    </form>
+    {% endif %}
   </div>
 </div>
 
