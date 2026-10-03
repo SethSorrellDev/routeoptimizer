@@ -37,7 +37,4 @@ def create_app(config_class=Config):
     app.register_blueprint(ssr_bp)
     app.register_blueprint(optimizer_bp)
 
-    from app.cli import grant_manager
-    app.cli.add_command(grant_manager)
-
     return app
