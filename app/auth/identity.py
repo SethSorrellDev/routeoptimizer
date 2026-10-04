@@ -5,13 +5,21 @@ questions: "did identity-service accept this email and password?" and "who
 does the signed token say this is?". The token is verified against the
 service's public JWKS, so RouteOptimizer never holds a private key.
 """
+import logging
 import os
+import time
 
 import jwt
 import requests
 from jwt import PyJWKClient
 
-TIMEOUT_SECONDS = 5
+TIMEOUT_SECONDS = 20  # the free-tier service can be slow while it wakes
+ATTEMPTS = 3
+RETRY_DELAY_SECONDS = 4
+TRANSIENT_STATUSES = (502, 503, 504)
+WAKING_MESSAGE = "The sign-in service is waking up. Please try again in about a minute."
+
+log = logging.getLogger(__name__)
 
 
 class IdentityError(Exception):
@@ -64,19 +72,36 @@ def verify_access_token(token):
     return claims
 
 
+def _post(path, payload):
+    """POST to identity-service, retrying while it wakes from idle.
+
+    Connection errors, timeouts and 502/503/504 are treated as "still waking"
+    and retried. Any other status is a real answer and is returned untouched
+    for the caller to interpret. Raises IdentityError(WAKING_MESSAGE) once
+    every attempt has failed.
+    """
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            response = requests.post(
+                f"{_base_url()}{path}", json=payload, timeout=TIMEOUT_SECONDS
+            )
+        except requests.RequestException as exc:
+            log.warning("identity %s attempt %d failed: %s", path, attempt, exc.__class__.__name__)
+        else:
+            if response.status_code not in TRANSIENT_STATUSES:
+                return response
+            log.warning("identity %s attempt %d: HTTP %d", path, attempt, response.status_code)
+        if attempt < ATTEMPTS:
+            time.sleep(RETRY_DELAY_SECONDS)
+    raise IdentityError(WAKING_MESSAGE)
+
+
 def authenticate(email, password):
     """Sign in against identity-service and return verified access-token claims.
 
     Raises IdentityError with a user-safe message on any failure.
     """
-    try:
-        response = requests.post(
-            f"{_base_url()}/auth/login",
-            json={"email": email, "password": password},
-            timeout=TIMEOUT_SECONDS,
-        )
-    except requests.RequestException as exc:
-        raise IdentityError("The sign-in service is unavailable. Try again shortly.") from exc
+    response = _post("/auth/login", {"email": email, "password": password})
 
     if response.status_code == 400:
         # Identity-service answers bad credentials with 400 and {"error": "..."}.
@@ -102,14 +127,10 @@ def register(name, email, password):
     parts = name.strip().split(None, 1)
     first = parts[0] if parts else "User"
     last = parts[1] if len(parts) > 1 else "-"  # identity-service requires a last name
-    try:
-        response = requests.post(
-            f"{_base_url()}/auth/register",
-            json={"email": email, "password": password, "firstName": first, "lastName": last},
-            timeout=TIMEOUT_SECONDS,
-        )
-    except requests.RequestException as exc:
-        raise IdentityError("The sign-in service is unavailable. Try again shortly.") from exc
+    response = _post(
+        "/auth/register",
+        {"email": email, "password": password, "firstName": first, "lastName": last},
+    )
 
     if response.status_code == 400:
         try:
