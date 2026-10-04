@@ -201,13 +201,17 @@ key. With `ORS_API_KEY` set it geocodes them for you; otherwise use the
 are exactly where public geocoders go wrong, so every stop also accepts a manual
 latitude and longitude — the plant's own address resolves about three miles off.
 
-### Creating a demo login
+### Accounts and roles
 
-Credentials are never committed. Pass them through the environment:
+Credentials live in the shared identity service, never in this repo. The first
+time someone signs in, RouteOptimizer creates their account with the
+least-privileged **SSR** role. An administrator promotes people to Manager
+afterwards.
 
-```bash
-DEMO_USERNAME=demo DEMO_PASSWORD='choose-something' python seed_demo.py
-```
+An account created here before the identity service existed is linked on its
+first sign-in, and only if the person also supplies the old local password.
+Identity-service emails are unverified, so an email match alone is never enough
+to claim an existing account.
 
 ---
 
@@ -215,7 +219,7 @@ DEMO_USERNAME=demo DEMO_PASSWORD='choose-something' python seed_demo.py
 
 **Working:** full CRUD for stops, routes, holidays and plant settings;
 geocoding with manual override; distance-matrix caching; the VRPTW optimizer;
-the results dashboard; per-stop schedule editing; 84 tests in CI.
+the results dashboard; per-stop schedule editing; 114 tests.
 
 **Known limitations, by priority rather than oversight:**
 
