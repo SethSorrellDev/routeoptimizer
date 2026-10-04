@@ -14,7 +14,9 @@ time, and the number of assistants the route needs — in under a second.
 > Hosted on Render's free tier, which spins services down when idle. The first
 > request after a quiet period can take up to 60 seconds to wake the instance.
 
-**Demo login:** not yet provisioned — see "Creating a demo login" below.
+**Demo access:** available on request. Sign-in goes through a shared identity
+service that also backs my other portfolio apps; the first sign-in after a quiet
+period can be slow while that service wakes up.
 
 ---
 
@@ -133,7 +135,7 @@ fail if the fix is reverted:
 |---|---|
 | Backend | Flask, SQLAlchemy, Flask-Migrate (Alembic) |
 | Database | PostgreSQL (production and local dev) |
-| Auth | Flask-Login, Flask-Bcrypt, role-based access (Manager / SSR) |
+| Auth | Shared identity-service (RS256 JWT, verified against its JWKS) for credentials; Flask-Login for the browser session; role-based access (Manager / SSR) |
 | Geocoding & routing | OpenRouteService, behind a swappable `DistanceProvider` |
 | Maps | Leaflet.js + OpenStreetMap |
 | CI | GitHub Actions (pytest on Python 3.12 and 3.13) |
@@ -189,7 +191,9 @@ python seed_demo.py      # optional: a five-stop demo route
 flask --app run.py run
 ```
 
-Then open http://127.0.0.1:5000 and register a Manager account.
+Sign-in needs a running identity-service. The app looks for it at
+`http://localhost:8081` by default; set `IDENTITY_URL` to point elsewhere.
+Then open http://127.0.0.1:5000 and register an account.
 
 `seed_demo.py` seeds stops **without** coordinates, since geocoding needs an API
 key. With `ORS_API_KEY` set it geocodes them for you; otherwise use the
