@@ -14,9 +14,10 @@ time, and the number of assistants the route needs — in under a second.
 > Hosted on Render's free tier, which spins services down when idle. The first
 > request after a quiet period can take up to 60 seconds to wake the instance.
 
-**Demo access:** available on request. Sign-in goes through a shared identity
-service that also backs my other portfolio apps; the first sign-in after a quiet
-period can be slow while that service wakes up.
+**Demo access:** available on request. New sign-ins get the least-privileged
+SSR role. Sign-in goes through a shared identity service that also backs my
+other portfolio apps; it runs on an always-on paid instance, so sign-in itself
+never waits on a cold start.
 
 ---
 
@@ -90,7 +91,7 @@ feasibility verdict, and explicit warnings naming any violated window.
 ## Testing
 
 ```
-84 tests · 99% statement coverage on the optimizer engine
+114 tests · 99% statement coverage on the optimizer engine
 ```
 
 ```bash
@@ -225,8 +226,8 @@ the results dashboard; per-stop schedule editing; 114 tests.
 
 - Single vehicle per route — no fleet-wide optimization across trucks
 - No OR-Tools cross-validation of the heuristic against a known optimum
-- Render's free tier cold-starts the service and expires the database
-  periodically without manual renewal
+- Render's free tier cold-starts the service, and the free Postgres database
+  expires on a fixed schedule and has to be renewed
 
 ---
 
