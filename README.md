@@ -91,7 +91,7 @@ feasibility verdict, and explicit warnings naming any violated window.
 ## Testing
 
 ```
-114 tests · 99% statement coverage on the optimizer engine
+130 tests · 99% statement coverage on the optimizer engine
 ```
 
 ```bash
@@ -188,6 +188,7 @@ flask db upgrade
 python seed_roles.py
 python seed_plant.py
 python seed_demo.py      # optional: a five-stop demo route
+python seed_sample.py    # optional: fully fictional routes with a synthetic travel-time cache
 
 flask --app run.py run
 ```
@@ -201,6 +202,15 @@ key. With `ORS_API_KEY` set it geocodes them for you; otherwise use the
 "Re-geocode from address" button on each stop. Rural and industrial addresses
 are exactly where public geocoders go wrong, so every stop also accepts a manual
 latitude and longitude — the plant's own address resolves about three miles off.
+
+### Sample data
+
+`seed_sample.py` creates two fictional routes and fourteen invented stops around the plant, with made-up business names, addresses and `555-01xx` phone numbers. It also fills the travel-time cache with synthetic times (straight-line distance, road-winding factor, 50 km/h), so Optimize works with no API key and no network. Route A is comfortably feasible; Route B is deliberately over-constrained to show the window warnings. Run A on Mon/Wed/Fri and B on Tue/Thu.
+
+```bash
+python seed_sample.py            # add (safe to re-run)
+python seed_sample.py --remove   # delete only what it created
+```
 
 ### Accounts and roles
 
@@ -220,7 +230,7 @@ to claim an existing account.
 
 **Working:** full CRUD for stops, routes, holidays and plant settings;
 geocoding with manual override; distance-matrix caching; the VRPTW optimizer;
-the results dashboard; per-stop schedule editing; 114 tests.
+the results dashboard; per-stop schedule editing; 130 tests.
 
 **Known limitations, by priority rather than oversight:**
 
